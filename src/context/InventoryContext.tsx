@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, ProductFormData, SortOption, SortDirection } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -49,7 +48,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [products, sortOption, sortDirection, searchTerm, categoryFilter]);
 
   useEffect(() => {
-    // Check for notifications on load and then every minute
     checkNotifications();
     const interval = setInterval(checkNotifications, 60000);
     return () => clearInterval(interval);
@@ -58,19 +56,16 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const applyFiltersAndSort = () => {
     let result = [...products];
     
-    // Apply search filter
     if (searchTerm) {
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
-    // Apply category filter
     if (categoryFilter) {
       result = result.filter(product => product.category === categoryFilter);
     }
     
-    // Apply sort
     result.sort((a, b) => {
       if (sortOption === 'name') {
         return sortDirection === 'asc' 
@@ -81,7 +76,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           ? a.quantity - b.quantity
           : b.quantity - a.quantity;
       } else if (sortOption === 'expiryDate') {
-        // Handle null expiry dates by sorting them last
         if (a.expiryDate === null) return sortDirection === 'asc' ? 1 : -1;
         if (b.expiryDate === null) return sortDirection === 'asc' ? -1 : 1;
         
@@ -172,7 +166,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       const expiryDate = new Date(product.expiryDate);
       
-      // Check if the product has expired or will expire within 7 days
       return isPast(expiryDate) || 
              isWithinInterval(expiryDate, { start: today, end: sevenDaysLater });
     });
