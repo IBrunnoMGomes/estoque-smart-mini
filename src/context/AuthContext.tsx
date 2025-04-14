@@ -1,8 +1,9 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 type AuthContextType = {
   session: Session | null;
@@ -27,19 +28,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { toast: useToastFn } = useToast();
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      toast.error('Supabase não está configurado. Por favor, configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      setLoading(false);
+      return;
+    }
+
     // Buscar sessão inicial e configurar o listener
     const setData = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Erro ao buscar sessão:', error);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Erro ao buscar sessão:', error);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (e) {
+        console.error('Erro ao buscar sessão:', e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     setData();
@@ -59,29 +71,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Função de cadastro
   const signUp = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      return { 
+        data: null, 
+        error: new Error('Supabase não está configurado. Configure as variáveis de ambiente.') 
+      };
+    }
+
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
+    const result = await supabase.auth.signUp({
       email,
       password,
     });
     setLoading(false);
-    return { data, error };
+    return result;
   };
 
   // Função de login
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      return { 
+        data: null, 
+        error: new Error('Supabase não está configurado. Configure as variáveis de ambiente.') 
+      };
+    }
+
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     setLoading(false);
-    return { data, error };
+    return result;
   };
 
   // Função de logout
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut();
+    }
   };
 
   return (
