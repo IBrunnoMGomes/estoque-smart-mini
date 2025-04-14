@@ -8,8 +8,11 @@ import {
   LayoutDashboard,
   Settings,
   LogOut,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface NavItemProps {
   to: string;
@@ -40,12 +43,19 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const currentPath = location.pathname;
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth-token');
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logout realizado com sucesso');
     navigate('/login');
+  };
+
+  // Extrair as iniciais ou email para o avatar
+  const getUserInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email.substring(0, 2).toUpperCase();
   };
 
   const navItems = [
@@ -93,6 +103,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           
           <div className="p-4 border-t border-border mt-auto">
+            {user && (
+              <div className="mb-4 flex items-center">
+                <Avatar className="h-8 w-8 mr-2">
+                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium truncate">
+                    {user.email}
+                  </span>
+                </div>
+              </div>
+            )}
             <Button 
               variant="ghost" 
               className="w-full justify-start text-muted-foreground"
@@ -111,6 +133,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <header className="border-b border-border p-4 md:hidden">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Estoque Smart</h1>
+            {user && (
+              <Avatar>
+                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+              </Avatar>
+            )}
           </div>
         </header>
         
