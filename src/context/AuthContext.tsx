@@ -1,8 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User, Provider } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 type AuthContextType = {
@@ -17,6 +16,7 @@ type AuthContextType = {
     error: any | null;
     data: any | null;
   }>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -28,15 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast: useToastFn } = useToast();
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      toast.error('Supabase não está configurado. Por favor, configure as variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
-      setLoading(false);
-      return;
-    }
-
     // Buscar sessão inicial e configurar o listener
     const setData = async () => {
       try {
@@ -71,13 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Função de cadastro
   const signUp = async (email: string, password: string) => {
-    if (!isSupabaseConfigured()) {
-      return { 
-        data: null, 
-        error: new Error('Supabase não está configurado. Configure as variáveis de ambiente.') 
-      };
-    }
-
     setLoading(true);
     const result = await supabase.auth.signUp({
       email,
@@ -89,13 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Função de login
   const signIn = async (email: string, password: string) => {
-    if (!isSupabaseConfigured()) {
-      return { 
-        data: null, 
-        error: new Error('Supabase não está configurado. Configure as variáveis de ambiente.') 
-      };
-    }
-
     setLoading(true);
     const result = await supabase.auth.signInWithPassword({
       email,
@@ -105,11 +84,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return result;
   };
 
+  // Função de login com Google
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      
+      if (error) {
+        toast.error('Erro ao fazer login com Google: ' + error.message);
+      }
+    } catch (error: any) {
+      toast.error('Erro ao fazer login com Google: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Função de logout
   const signOut = async () => {
-    if (isSupabaseConfigured()) {
-      await supabase.auth.signOut();
-    }
+    await supabase.auth.signOut();
   };
 
   return (
@@ -120,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
       }}
     >
