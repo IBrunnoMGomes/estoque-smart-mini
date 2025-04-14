@@ -61,10 +61,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   });
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit({
-      ...data,
+    const formattedData: ProductFormData = {
+      name: data.name,
+      category: data.category,
+      quantity: data.quantity,
+      minQuantity: data.minQuantity,
+      price: data.price,
       expiryDate: data.expiryDate ? data.expiryDate.toISOString() : null,
-    });
+    };
+    onSubmit(formattedData);
   };
 
   return (

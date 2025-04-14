@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, ProductFormData, SortOption, SortDirection } from '../types';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,7 +63,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       );
     }
     
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== 'all') {
       result = result.filter(product => product.category === categoryFilter);
     }
     

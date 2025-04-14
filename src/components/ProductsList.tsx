@@ -93,7 +93,6 @@ const ProductsList: React.FC<ProductsListProps> = ({ onAddProduct }) => {
   };
 
   const handleSort = (option: SortOption) => {
-    // If clicking the same option, toggle direction, otherwise set to asc
     const newDirection: SortDirection =
       option === sortOption && sortDirection === 'asc' ? 'desc' : 'asc';
     sortProducts(option, newDirection);
@@ -170,7 +169,7 @@ const ProductsList: React.FC<ProductsListProps> = ({ onAddProduct }) => {
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas as categorias</SelectItem>
+            <SelectItem value="all">Todas as categorias</SelectItem>
             {categories.map((category, index) => (
               <SelectItem key={index} value={category}>
                 {category}
