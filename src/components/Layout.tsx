@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface NavItemProps {
   to: string;
@@ -38,7 +39,14 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth-token');
+    toast.success('Logout realizado com sucesso');
+    navigate('/login');
+  };
 
   const navItems = [
     {
@@ -85,7 +93,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
           
           <div className="p-4 border-t border-border mt-auto">
-            <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-muted-foreground"
+              onClick={handleLogout}
+            >
               <LogOut className="h-5 w-5 mr-2" />
               Sair
             </Button>
